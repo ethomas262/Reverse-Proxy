@@ -1,0 +1,82 @@
+version: '3.3'
+
+
+services:
+
+  #define http server container
+  webserver1:
+    #pull a simple http server for testing
+    image: httpd:2.4
+    restart: always
+
+    #set up http resources for backend server
+    volumes:
+      - ./Content:/usr/local/apache2/htdocs/
+    expose:
+      - 80
+    networks:
+      back-end:
+        aliases:
+          - webserver1
+          
+
+  #define http server container
+  webserver2:
+    #pull a simple http server for testing
+    image: httpd:2.4
+    restart: always
+
+    #set up http resources for backend server
+    volumes:
+      - ./Content:/usr/local/apache2/htdocs/
+    expose:
+      - 80
+
+    networks:
+      back-end:
+        aliases:
+          - webserver2
+    
+
+    
+      
+  #define nginx proxy container
+  reverseproxy:
+
+    #pull nginx container image from docker
+    image: nginx:${NGINX_VERSION:-1.21-alpine}
+
+    #tell server to restart when down
+    restart: always
+
+    #use .env file to declare host ip for nginx container
+    environment:
+      - NGINX_HOST=$NGINX_HOST
+    
+    #map nginx.conf and ssl cert directories to container directories
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./certs:/etc/nginx/certs/
+
+    #declare requirements for proxy to work
+    depends_on:
+      - webserver1
+      - webserver2
+
+    #expose ports 80 and 443 on nginx container
+    expose:
+      - 80
+      - 443
+    networks:
+      back-end:
+        aliases:
+          - proxyserver
+    
+    #map port 8080 on host device to port 80 of the nginx server
+    ports:
+      - "8080:80"
+      
+
+networks:
+  front-end:
+  back-end:
