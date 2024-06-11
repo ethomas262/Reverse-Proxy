@@ -4,7 +4,7 @@ version: '3.3'
 services:
 
   #define http server container
-  webserver:
+  webserver1:
     #pull a simple http server for testing
     image: httpd:2.4
     restart: always
@@ -13,7 +13,30 @@ services:
     volumes:
       - ./Content:/usr/local/apache2/htdocs/
     expose:
-      - 80 
+      - 80
+    networks:
+      back-end:
+        aliases:
+          - webserver1
+          
+
+  #define http server container
+  webserver2:
+    #pull a simple http server for testing
+    image: httpd:2.4
+    restart: always
+
+    #set up http resources for backend server
+    volumes:
+      - ./Content:/usr/local/apache2/htdocs/
+    expose:
+      - 80
+
+    networks:
+      back-end:
+        aliases:
+          - webserver2
+    
 
     
       
@@ -33,21 +56,27 @@ services:
     #map nginx.conf and ssl cert directories to container directories
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./certs:/etc/nginx/certs/
+      - .certs:/etc/nginx/certs/
 
     #declare requirements for proxy to work
     depends_on:
-      - webserver
+      - webserver1
+      - webserver2
 
     #expose ports 80 and 443 on nginx container
     expose:
       - 80
       - 443
     networks:
-      webserver:
+      back-end:
+        aliases:
+          - proxyserver
     
     #map port 8080 on host device to port 80 of the nginx server
     ports:
       - "8080:80"
+      
+
 networks:
-  webserver:
+  front-end:
+  back-end:
