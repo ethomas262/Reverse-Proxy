@@ -66,7 +66,6 @@ services:
     #expose ports 80 and 443 on nginx container
     expose:
       - 80
-      - 443
     networks:
       back-end:
         aliases:
